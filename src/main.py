@@ -1,3 +1,5 @@
+import yaml
+
 from transformers import AutoTokenizer, DataCollatorWithPadding
 from datasets import load_dataset
 from torch.utils.data import DataLoader
@@ -37,29 +39,40 @@ def prepare_dataset(hf_dataset, tokenizer, seq_len, tokenize_column="text", remo
     
     dataset = dataset.map(tokenize_fn)
 
-def prepare_dataloader():
-    tokenizer = prepare_tokenizer(
-        "HuggingFaceTB/SmolLM-1.7B"
-    )
+# pass in yaml config file
+def prepare_dataloader(config_file):
+    with open(config_file, 'r') as f:
+        config = yaml.safe_load(f)
+        tokenizer = config['tokenizer']
+        dataset = config['dataset']
+        
+        tokenize_column = config['tokenize_column']
+        remove_columns = config['remove_columns']
+        
+        batch_size = int(config['batch_size'])
+        seq_len = int(config['seq_len'])
+        
+        
+    tokenizer = prepare_tokenizer(tokenizer)
     dataset = prepare_dataset(
-        "OptimalScale/ClimbMix",
+        dataset,
         tokenizer,
-        64,
-        tokenize_column="text",
-        remove_columns=["token_count", "cluster_id", "text"]
+        seq_len,
+        tokenize_column=tokenize_column,
+        remove_columns=remove_columns
     )
     
     collator = DataCollatorWithPadding(
         tokenizer,
         padding='max_length',
-        max_length=64,
+        max_length=seq_len,
         pad_to_multiple_of=8,
         return_tensors='pt'
     )
     
     dataloader = DataLoader(
         dataset,
-        batch_size=2,
+        batch_size=batch_size,
         collate_fn=collator,
     )
     

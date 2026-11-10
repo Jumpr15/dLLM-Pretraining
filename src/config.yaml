@@ -1,0 +1,9 @@
+tokenizer: HuggingFaceTB/SmolLM-1.7B # will automatically add padding and mask token if tokenizer provides none
+dataset: OptimalScale/ClimbMix
+
+tokenize_column: text
+remove_columns: [token_count, cluster_id, text] # columns removed after tokenization
+
+batch_size: 2
+seq_len: 64 # should be multiple of 8
+
